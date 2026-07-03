@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yashavnth L — 3D Render Studio</title>
+<meta name="description" content="Yashavnth L — Blender artist specializing in space and sci-fi environment renders and animations.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --void:#06070f;
+    --deep-navy:#0c1024;
+    --panel:#10142a;
+    --nebula-purple:#8a6cff;
+    --aurora-cyan:#52e0d4;
+    --solar-amber:#ffb877;
+    --star-white:#f3f1ea;
+    --dim:#9198b8;
+    --line: rgba(243,241,234,0.09);
+    --glass-bg: rgba(20,24,48,0.45);
+    --glass-border: rgba(255,255,255,0.10);
+
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background: var(--void);
+    color: var(--star-white);
+    font-family: var(--body);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+
+  #starfield{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    display:block;
+  }
+
+  .nebula-layer{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .nebula-blob{
+    position:absolute;
+    border-radius:50%;
+    filter: blur(90px);
+    opacity:0.35;
+  }
+  .nebula-blob.b1{
+    width:46vw; height:46vw;
+    top:-10%; left:-10%;
+    background: radial-gradient(circle at 30% 30%, var(--nebula-purple), transparent 70%);
+    animation: driftA 42s ease-in-out infinite;
+  }
+  .nebula-blob.b2{
+    width:38vw; height:38vw;
+    bottom:-12%; right:-8%;
+    background: radial-gradient(circle at 60% 40%, var(--aurora-cyan), transparent 70%);
+    animation: driftB 55s ease-in-out infinite;
+  }
+  .nebula-blob.b3{
+    width:26vw; height:26vw;
+    top:35%; right:20%;
+    background: radial-gradient(circle at 50% 50%, var(--solar-amber), transparent 72%);
+    opacity:0.18;
+    animation: driftA 65s ease-in-out infinite reverse;
+  }
+
+  @keyframes driftA{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(6vw,8vh) scale(1.12); }
+  }
+  @keyframes driftB{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(-5vw,-6vh) scale(1.08); }
+  }
+
+  main, header, footer{ position:relative; z-index:1; }
+
+  ::selection{ background: var(--nebula-purple); color:var(--void); }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 22px 6vw;
+    background: rgba(6,7,15,0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--line);
+    transition: background .4s ease;
+  }
+  .logo{
+    font-family: var(--display);
+    font-weight:600;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .logo span.dot{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--aurora-cyan);
+    box-shadow: 0 0 12px var(--aurora-cyan), 0 0 26px var(--aurora-cyan);
+    display:inline-block;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:.55; transform:scale(0.75); }
+  }
+  nav ul{
+    display:flex;
+    gap: 2.4rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  nav ul li a{
+    position:relative;
+    padding-bottom:4px;
+    transition: color .3s ease;
+  }
+  nav ul li a::after{
+    content:'';
+    position:absolute;
+    left:0; bottom:0;
+    width:0%; height:1px;
+    background: var(--aurora-cyan);
+    transition: width .35s ease;
+  }
+  nav ul li a:hover{ color: var(--star-white); }
+  nav ul li a:hover::after{ width:100%; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    padding: 0 6vw;
+    position:relative;
+  }
+  .hero-eyebrow{
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--aurora-cyan);
+    margin-bottom: 1.6rem;
+    opacity:0;
+    animation: fadeUp 1.1s ease forwards 0.15s;
+    display:flex;
+    align-items:center;
+    gap: .6em;
+  }
+  .hero-eyebrow::before{
+    content:'';
+    width: 28px; height:1px;
+    background: var(--aurora-cyan);
+  }
+  .hero h1{
+    font-family: var(--display);
+    font-weight:600;
+    font-size: clamp(2.6rem, 7vw, 6.2rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    max-width: 14ch;
+    opacity:0;
+    animation: fadeUp 1.2s ease forwards 0.4s;
+  }
+  .hero h1 em{
+    font-style:normal;
+    background: linear-gradient(100deg, var(--nebula-purple), var(--aurora-cyan) 60%, var(--solar-amber));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .hero p.lead{
+    margin-top: 1.8rem;
+    max-width: 46ch;
+    font-size: 1.08rem;
+    line-height:1.7;
+    color: var(--dim);
+    font-weight:300;
+    opacity:0;
+    animation: fadeUp 1.2s ease forwards 0.7s;
+  }
+  .hero-cta{
+    margin-top: 2.6rem;
+    display:flex;
+    gap: 1.1rem;
+    opacity:0;
+    animation: fadeUp 1.2s ease forwards 0.95s;
+  }
+  .btn{
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    padding: 0.95rem 1.7rem;
+    border-radius: 999px;
+    transition: all .35s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:.5em;
+  }
+  .btn-primary{
+    background: var(--star-white);
+    color: var(--void);
+  }
+  .btn-primary:hover{
+    background: var(--aurora-cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(82,224,212,0.25);
+  }
+  .btn-ghost{
+    border: 1px solid var(--glass-border);
+    color: var(--star-white);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+  }
+  .btn-ghost:hover{
+    border-color: var(--aurora-cyan);
+    transform: translateY(-2px);
+  }
+
+  .scroll-cue{
+    position:absolute;
+    bottom: 42px;
+    left: 6vw;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    color: var(--dim);
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap: .8em;
+    opacity:0;
+    animation: fadeUp 1.2s ease forwards 1.3s;
+  }
+  .scroll-cue .line{
+    width:1px; height:34px;
+    background: linear-gradient(var(--dim), transparent);
+    animation: scrollLine 2.2s ease-in-out infinite;
+  }
+  @keyframes scrollLine{
+    0%{ transform: scaleY(0); transform-origin: top; }
+    50%{ transform: scaleY(1); transform-origin: top; }
+    50.01%{ transform-origin: bottom; }
+    100%{ transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform: translateY(26px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  /* ---------- SECTION SHARED ---------- */
+  section{ padding: 9rem 6vw; }
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap: 2rem;
+    margin-bottom: 4.2rem;
+    flex-wrap:wrap;
+  }
+  .section-tag{
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform:uppercase;
+    color: var(--nebula-purple);
+    margin-bottom: 0.9rem;
+    display:block;
+  }
+  .section-head h2{
+    font-family: var(--display);
+    font-weight:600;
+    font-size: clamp(2rem, 4vw, 3.1rem);
+    max-width: 16ch;
+  }
+  .section-head p{
+    max-width: 34ch;
+    color: var(--dim);
+    font-size: 0.98rem;
+    line-height:1.7;
+    font-weight:300;
+  }
+
+  .reveal{
+    opacity:0;
+    transform: translateY(36px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  .reveal.in{
+    opacity:1;
+    transform: translateY(0);
+  }
+
+  /* ---------- GALLERY ---------- */
+  .gallery-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.8rem;
+  }
+  @media (max-width: 700px){
+    .gallery-grid{ grid-template-columns: 1fr; }
+  }
+
+  .art-card{
+    position:relative;
+    border-radius: 18px;
+    overflow:hidden;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), border-color .5s ease, box-shadow .5s ease;
+    display:flex;
+    flex-direction:column;
+  }
+  .art-card:hover{
+    transform: translateY(-8px);
+    border-color: rgba(82,224,212,0.35);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  }
+
+  /* Placeholder "render" thumbnail — swap for <img> per the guide below */
+  .art-thumb{
+    aspect-ratio: 16 / 9;
+    position:relative;
+    overflow:hidden;
+  }
+  .art-thumb .render-fill{
+    position:absolute; inset:0;
+    background-size: cover;
+    background-position:center;
+    transition: transform 1.4s cubic-bezier(.2,.7,.2,1);
+  }
+  .art-card:hover .render-fill{ transform: scale(1.06); }
+
+  .art-thumb::after{
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(6,7,15,0) 40%, rgba(6,7,15,0.85) 100%);
+    pointer-events:none;
+  }
+
+  video.render-fill{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    background:#000;
+  }
+
+  .render-fill{
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-user-drag:none;
+    -webkit-touch-callout:none;
+  }
+
+  .motion-note{
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--dim);
+    margin-top: 0.6rem;
+  }
+
+  .r1 .render-fill{ background-image: radial-gradient(circle at 30% 25%, #3d2f7a, #0c0e1f 65%), radial-gradient(circle at 75% 70%, #52e0d4aa, transparent 40%); }
+  .r2 .render-fill{ background-image: radial-gradient(circle at 65% 30%, #ffb877, #1a0f0a 60%), radial-gradient(circle at 20% 80%, #8a6cff88, transparent 45%); }
+  .r3 .render-fill{ background-image: radial-gradient(circle at 40% 60%, #52e0d4, #060a14 65%), radial-gradient(circle at 80% 20%, #8a6cffaa, transparent 40%); }
+  .r4 .render-fill{ background-image: radial-gradient(circle at 55% 40%, #8a6cff, #0a0a16 62%), radial-gradient(circle at 15% 75%, #ffb87788, transparent 42%); }
+  .r5 .render-fill{ background-image: radial-gradient(circle at 25% 70%, #52e0d4, #0b0c1a 60%), radial-gradient(circle at 80% 30%, #ffb87766, transparent 40%); }
+  .r6 .render-fill{ background-image: radial-gradient(circle at 70% 65%, #ff9d6c, #0d0a14 60%), radial-gradient(circle at 25% 25%, #8a6cff99, transparent 45%); }
+
+  .catalog-id{
+    position:absolute;
+    top: 16px; left: 16px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--star-white);
+    background: rgba(6,7,15,0.5);
+    border: 1px solid var(--glass-border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+  }
+  .art-tag{
+    position:absolute;
+    bottom:16px; left:16px; right:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+  }
+  .art-tag .cat{
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--aurora-cyan);
+  }
+  .art-body{
+    padding: 1.4rem 1.5rem 1.6rem;
+  }
+  .art-body h3{
+    font-family: var(--display);
+    font-weight:600;
+    font-size: 1.25rem;
+    margin-bottom: .5rem;
+  }
+  .art-body p{
+    font-size: 0.88rem;
+    color: var(--dim);
+    line-height:1.6;
+    font-weight:300;
+  }
+
+  /* ---------- ABOUT ---------- */
+  .about-wrap{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 4rem;
+    align-items:start;
+  }
+  @media (max-width: 900px){
+    .about-wrap{ grid-template-columns:1fr; }
+  }
+  .about-wrap p{
+    font-size: 1.05rem;
+    line-height:1.85;
+    color: var(--dim);
+    font-weight:300;
+    margin-bottom: 1.4rem;
+  }
+  .about-wrap p strong{ color: var(--star-white); font-weight:500; }
+
+  .instruments{
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 2rem;
+  }
+  .instruments h4{
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--nebula-purple);
+    margin-bottom: 1.4rem;
+  }
+  .instruments ul li{
+    display:flex;
+    justify-content:space-between;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+  }
+  .instruments ul li:last-child{ border-bottom:none; }
+  .instruments ul li span.lvl{
+    font-family: var(--mono);
+    color: var(--dim);
+    font-size: 0.78rem;
+  }
+
+  /* ---------- CONTACT ---------- */
+  .contact-card{
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    padding: 4.5rem 5vw;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .contact-card::before{
+    content:'';
+    position:absolute;
+    top:-40%; left:50%;
+    width: 60vw; height:60vw;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(138,108,255,0.18), transparent 65%);
+    pointer-events:none;
+  }
+  .contact-card h2{
+    font-family: var(--display);
+    font-weight:600;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    margin-bottom: 1.2rem;
+    position:relative;
+  }
+  .contact-card p{
+    color: var(--dim);
+    max-width: 44ch;
+    margin: 0 auto 2.2rem;
+    font-weight:300;
+    position:relative;
+  }
+  .contact-links{
+    display:flex;
+    justify-content:center;
+    gap: 1rem;
+    flex-wrap:wrap;
+    position:relative;
+  }
+
+  footer{
+    padding: 3rem 6vw;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--dim);
+    flex-wrap:wrap;
+    gap: 1rem;
+  }
+
+  @media (max-width: 700px){
+    header{ padding: 18px 5vw; }
+    nav ul{ gap:1.2rem; font-size:0.68rem; }
+    section{ padding: 6rem 6vw; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula-layer">
+  <div class="nebula-blob b1"></div>
+  <div class="nebula-blob b2"></div>
+  <div class="nebula-blob b3"></div>
+</div>
+
+<header>
+  <div class="logo"><span class="dot"></span>YASHAVNTH&nbsp;L</div>
+  <nav>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero" style="padding-top:0;">
+    <div class="hero-eyebrow">Yashavnth L · Blender / Cycles</div>
+    <h1>Renders from the <em>edge of orbit.</em></h1>
+    <p class="lead">I build alien terrain, ringed skies, and interstellar machinery inside Blender — then light and animate them like they were captured for real. Currently open for freelance and studio collaborations.</p>
+    <div class="hero-cta">
+      <a href="#work" class="btn btn-primary">View the catalog</a>
+      <a href="#contact" class="btn btn-ghost">Start a project</a>
+    </div>
+    <div class="scroll-cue"><span class="line"></span>Scroll</div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="work">
+    <div class="section-head reveal">
+      <div>
+        <span class="section-tag">Catalog · 04 objects</span>
+        <h2>Selected renders</h2>
+      </div>
+      <p>Each piece below is logged the way a real observation would be — by catalog number, category, and a short field note.</p>
+    </div>
+
+    <div class="gallery-grid">
+
+      <!-- Replace the empty <div class="render-fill"></div> below with:
+           <img class="render-fill" src="images/beneath-jupiter.jpg" alt="Rocky alien terrain beneath Jupiter" style="width:100%;height:100%;object-fit:cover;"> -->
+      <article class="art-card reveal">
+        <div class="art-thumb r1">
+          <img class="render-fill" src="images/jupiter moon.jpg" alt="Rocky alien terrain beneath Jupiter" style="width:100%;height:100%;object-fit:cover;">
+          <span class="catalog-id">CAT—0101</span>
+          <div class="art-tag"><span class="cat">Planetary Environment</span></div>
+        </div>
+        <div class="art-body">
+          <h3>Beneath Jupiter</h3>
+          <p>Rocky alien terrain beneath Jupiter's towering presence, creating a breathtaking and otherworldly cosmic horizon.</p>
+        </div>
+      </article>
+
+      <!-- Replace with: images/ringed-nightfall.jpg -->
+      <article class="art-card reveal">
+        <div class="art-thumb r2">
+          <img class="render-fill" src="images/ring planet.jpg" alt="Ringed Nightfall" style="width:100%;height:100%;object-fit:cover;">
+          <span class="catalog-id">CAT—0102</span>
+          <div class="art-tag"><span class="cat">Planetary Environment</span></div>
+        </div>
+        <div class="art-body">
+          <h3>Ringed Nightfall</h3>
+          <p>Purple mountain landscape illuminated by a majestic ringed planet, evoking a surreal extraterrestrial nightscape.</p>
+        </div>
+      </article>
+
+      <!-- Static frame — replace with: images/ion-drift.jpg -->
+      <article class="art-card reveal">
+        <div class="art-thumb r3">
+          <img class="render-fill" src="images/spacecraft.jpg" alt="Ion Drift" style="width:100%;height:100%;object-fit:cover;">
+          <span class="catalog-id">CAT—0203</span>
+          <div class="art-tag"><span class="cat">Hard-Surface / Spacecraft</span></div>
+        </div>
+        <div class="art-body">
+          <h3>Ion Drift</h3>
+          <p>Futuristic spacecraft with glowing ion engines cruises through a star-filled expanse, embodying advanced interstellar exploration.</p>
+        </div>
+      </article>
+
+      <!-- Static frame — replace with: images/crater-zero.jpg -->
+      <article class="art-card reveal">
+        <div class="art-thumb r4">
+          <img class="render-fill" src="images/moon.jpg" alt="Crater Zero" style="width:100%;height:100%;object-fit:cover;">
+          <span class="catalog-id">CAT—0304</span>
+          <div class="art-tag"><span class="cat">Lunar / Top-Down Render</span></div>
+        </div>
+        <div class="art-body">
+          <h3>Crater Zero</h3>
+          <p>Top-down view of a lunar crater, built for cinematic shadow play and realistic surface detail.</p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- MOTION / ANIMATIONS -->
+  <section id="motion">
+    <div class="section-head reveal">
+      <div>
+        <span class="section-tag">Motion · 02 studies</span>
+        <h2>Animated renders</h2>
+      </div>
+      <p>Two of the pieces above, extended into motion. Autoplay is intentionally off so nothing steals bandwidth — press play to watch.</p>
+    </div>
+
+    <div class="gallery-grid">
+
+      <!-- Replace the <source> src below with your real video file, e.g. videos/ion-drift.mp4
+           Optional: add a poster="images/ion-drift.jpg" attribute on the <video> tag for a nice thumbnail before play -->
+      <article class="art-card video-card reveal">
+        <div class="art-thumb r3">
+          <video class="render-fill" controls muted playsinline preload="metadata">
+            <source src="videos/ion_drive.mp4" type="video/mp4">
+          </video>
+          <span class="catalog-id">CAT—0203-M</span>
+          <div class="art-tag"><span class="cat">Motion Study</span></div>
+        </div>
+        <div class="art-body">
+          <h3>Ion Drift — Animated</h3>
+          <p>Full flythrough of the ion-engine spacecraft as it cruises through the star field.</p>
+          <div class="motion-note">MP4 · replace source in videos/ion-drift.mp4</div>
+        </div>
+      </article>
+
+      <!-- Replace with: videos/crater-zero.mp4, poster="images/crater-zero.jpg" -->
+      <article class="art-card video-card reveal">
+        <div class="art-thumb r4">
+          <video class="render-fill" controls muted playsinline preload="metadata">
+            <source src="videos/crater.mp4" type="video/mp4">
+          </video>
+          <span class="catalog-id">CAT—0304-M</span>
+          <div class="art-tag"><span class="cat">Motion Study</span></div>
+        </div>
+        <div class="art-body">
+          <h3>Crater Zero — Animated</h3>
+          <p>Slow cinematic pass over the lunar crater, tracking the shifting shadow line.</p>
+          <div class="motion-note">MP4 · replace source in videos/crater-zero.mp4</div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-head reveal">
+      <div>
+        <span class="section-tag">About</span>
+        <h2>The artist behind the viewport</h2>
+      </div>
+    </div>
+
+    <div class="about-wrap">
+      <div class="reveal">
+        <p>I'm <strong>Yashavnth L</strong>, a 3D artist focused on space environments and hard-surface sci-fi. Every piece starts the same way — a lighting idea, usually one strong key light and a lot of negative space, built out in Blender until it feels like it could have been photographed rather than rendered.</p>
+        <p>My work leans toward <strong>alien terrain and believable scale</strong>: ringed skies over rocky ground, lunar craters, and machinery that looks like it was built for a real mission. I care as much about the story implied by a scene as the surface detail on it — and I take some of that work into motion as well.</p>
+        <p>Available for <strong>freelance commissions, concept work, and studio collaborations</strong>.</p>
+      </div>
+
+      <div class="instruments reveal">
+        <h4>Tools & instruments</h4>
+        <ul>
+          <li>Blender (Cycles / EEVEE) <span class="lvl">Primary</span></li>
+          <li>Substance Painter <span class="lvl">Texturing</span></li>
+          <li>World Machine <span class="lvl">Terrain</span></li>
+          <li>DaVinci Resolve <span class="lvl">Compositing</span></li>
+          <li>Nuke <span class="lvl">VFX passes</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact-card reveal">
+      <h2>Let's build something<br>out there.</h2>
+      <p>Open for freelance renders, environment design, and studio collaborations. Usually replies within two orbits (a.k.a. 48 hours).</p>
+      <div class="contact-links">
+        <a href="mailto:hello@yashavnthl.art" class="btn btn-primary">hello@yashavnthl.art</a>
+        <a href="#" class="btn btn-ghost">ArtStation ↗</a>
+        <a href="#" class="btn btn-ghost">Instagram ↗</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>© 2026 Yashavnth L — Rendered in Blender.</span>
+  <span>Built for the stars.</span>
+</footer>
+
+<script>
+  // Starfield canvas — slow twinkle, subtle parallax
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  let w, h;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    const count = Math.floor((w * h) / 4500);
+    stars = Array.from({length: count}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.3 + 0.2,
+      baseAlpha: Math.random() * 0.6 + 0.2,
+      speed: Math.random() * 0.015 + 0.003,
+      phase: Math.random() * Math.PI * 2
+    }));
+  }
+
+  let t = 0;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function draw(){
+    ctx.clearRect(0, 0, w, h);
+    for(const s of stars){
+      const twinkle = reduceMotion ? s.baseAlpha : s.baseAlpha + Math.sin(t * s.speed + s.phase) * 0.25;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(243,241,234,${Math.max(0, Math.min(1, twinkle))})`;
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    t += 1;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // Stagger gallery cards slightly
+  document.querySelectorAll('.gallery-grid .art-card').forEach((card, i) => {
+    card.style.transitionDelay = `${(i % 2) * 0.1}s`;
+  });
+
+  // Header background strengthens on scroll
+  const header = document.querySelector('header');
+  window.addEventListener('scroll', () => {
+    if(window.scrollY > 40){
+      header.style.background = 'rgba(6,7,15,0.75)';
+    } else {
+      header.style.background = 'rgba(6,7,15,0.35)';
+    }
+  });
+
+  // Disable right-click context menu on artwork thumbnails, so images
+  // can't be trivially saved via "Save Image As". Note: this is a mild
+  // deterrent, not real protection — determined visitors can still get
+  // to image files via dev tools or a screenshot.
+  document.querySelectorAll('.render-fill').forEach(el => {
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.setAttribute('draggable', 'false');
+  });
+</script>
+
+</body>
+</html>
